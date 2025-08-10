@@ -1,0 +1,31 @@
+# This is a Node.js project - use package.json instead
+# See package.json for all dependencies
+
+# Backend Dependencies (from package.json):
+# express: ^4.18.2
+# mongoose: ^7.5.0
+# cors: ^2.8.5
+# dotenv: ^16.3.1
+# express-validator: ^7.0.1
+
+# Dev Dependencies:
+# nodemon: ^3.0.1
+# jest: ^29.6.4
+# supertest: ^6.3.3
+
+# To install backend dependencies:
+# cd server && npm install
+
+# Frontend Dependencies (from client/package.json):
+# react: ^18.2.0
+# react-dom: ^18.2.0
+# react-router-dom: ^6.15.0
+# axios: ^1.5.0
+# react-icons: ^4.11.0
+# date-fns: ^2.30.0
+
+# To install frontend dependencies:
+# cd client && npm install
+
+# To install all dependencies at once:
+# npm run install-all
