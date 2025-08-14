@@ -115,28 +115,6 @@ npm run test:unit
 
 ## 🛠️ Environment Variables
 
-### Development
-```bash
-# Server
-NODE_ENV=development
-MONGO_URI=mongodb://localhost:27017/taskflow
-JWT_SECRET=your-dev-secret
-PORT=5000
-
-# Client
-REACT_APP_API_URL=http://localhost:5000
-```
-
-### Production
-```bash
-# Server
-NODE_ENV=production
-MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/taskflow
-JWT_SECRET=your-production-secret
-PORT=5000
-
-# Client
-REACT_APP_API_URL=https://api.yourdomain.com
 ```
 
 ## 🚀 Deployment Options
