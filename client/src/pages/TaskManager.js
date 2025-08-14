@@ -1,57 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import TaskList from '../components/TaskList';
+import OptimizedTaskList from '../components/OptimizedTaskList';
 import TaskForm from '../components/TaskForm';
 import TaskFilters from '../components/TaskFilters';
-import { taskAPI } from '../services/api';
+import NotificationSystem from '../components/NotificationSystem';
+import enhancedTaskAPI from '../services/enhancedTaskAPI';
+import socketService from '../services/socketService';
 import '../styles/TaskManager.css';
 
 const TaskManager = () => {
   const [tasks, setTasks] = useState([]);
-  const [filteredTasks, setFilteredTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState({ status: 'all', priority: 'all' });
+  const [filter, setFilter] = useState({ 
+    status: 'all', 
+    priority: 'all', 
+    search: '' 
+  });
 
   useEffect(() => {
-    fetchTasks();
+    initializeApp();
+    return () => {
+      socketService.disconnect();
+    };
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [tasks, filter]);
-
-  const fetchTasks = async () => {
+  const initializeApp = async () => {
     try {
       setLoading(true);
-      const response = await taskAPI.getAllTasks();
-      setTasks(response.data);
+      await fetchTasks();
+      socketService.connect();
       setError(null);
     } catch (err) {
-      setError('Failed to fetch tasks');
-      console.error('Error fetching tasks:', err);
+      setError('Failed to initialize app');
+      console.error('Error initializing app:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...tasks];
-    
-    if (filter.status !== 'all') {
-      filtered = filtered.filter(task => task.status === filter.status);
+  const fetchTasks = async () => {
+    try {
+      const response = await enhancedTaskAPI.getAllTasks();
+      setTasks(response);
+    } catch (err) {
+      setError('Failed to fetch tasks');
+      console.error('Error fetching tasks:', err);
     }
-    
-    if (filter.priority !== 'all') {
-      filtered = filtered.filter(task => task.priority === filter.priority);
-    }
-    
-    setFilteredTasks(filtered);
   };
 
   const handleCreateTask = async (taskData) => {
     try {
-      const response = await taskAPI.createTask(taskData);
-      setTasks([response.data, ...tasks]);
+      const newTask = await enhancedTaskAPI.createTask(taskData);
+      setTasks(prev => [newTask, ...prev]);
     } catch (err) {
       console.error('Error creating task:', err);
     }
@@ -59,8 +59,8 @@ const TaskManager = () => {
 
   const handleUpdateTask = async (id, taskData) => {
     try {
-      const response = await taskAPI.updateTask(id, taskData);
-      setTasks(tasks.map(task => task._id === id ? response.data : task));
+      const updatedTask = await enhancedTaskAPI.updateTask(id, taskData);
+      setTasks(prev => prev.map(task => task._id === id ? updatedTask : task));
     } catch (err) {
       console.error('Error updating task:', err);
     }
@@ -68,8 +68,8 @@ const TaskManager = () => {
 
   const handleDeleteTask = async (id) => {
     try {
-      await taskAPI.deleteTask(id);
-      setTasks(tasks.filter(task => task._id !== id));
+      await enhancedTaskAPI.deleteTask(id);
+      setTasks(prev => prev.filter(task => task._id !== id));
     } catch (err) {
       console.error('Error deleting task:', err);
     }
@@ -77,10 +77,19 @@ const TaskManager = () => {
 
   const handleToggleTask = async (id) => {
     try {
-      const response = await taskAPI.toggleTask(id);
-      setTasks(tasks.map(task => task._id === id ? response.data : task));
+      const toggledTask = await enhancedTaskAPI.toggleTask(id);
+      setTasks(prev => prev.map(task => task._id === id ? toggledTask : task));
     } catch (err) {
       console.error('Error toggling task:', err);
+    }
+  };
+
+  const handleTaskUpdate = async (id, updates) => {
+    try {
+      const updatedTask = await enhancedTaskAPI.optimisticUpdate(id, updates);
+      setTasks(prev => prev.map(task => task._id === id ? updatedTask : task));
+    } catch (err) {
+      console.error('Error updating task:', err);
     }
   };
 
@@ -89,9 +98,11 @@ const TaskManager = () => {
 
   return (
     <div className="task-manager">
+      <NotificationSystem />
+      
       <header className="app-header">
         <h1>TaskFlow</h1>
-        <p>Manage your tasks efficiently</p>
+        <p>Manage your tasks efficiently with real-time updates</p>
       </header>
 
       <div className="task-container">
@@ -101,11 +112,10 @@ const TaskManager = () => {
         </aside>
 
         <main className="main-content">
-          <TaskList 
-            tasks={filteredTasks}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
-            onToggleTask={handleToggleTask}
+          <OptimizedTaskList 
+            tasks={tasks}
+            onTaskUpdate={handleTaskUpdate}
+            filters={filter}
           />
         </main>
       </div>
